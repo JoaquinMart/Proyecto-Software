@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% block title %}Personal{% endblock %}
+{% block page_title %}Personal del hospital{% endblock %}
+
+{% block page_actions %}
+  {% if tiene_permiso('personal_import') %}
+    <a class="btn" href="{{ url_for('personal.importar') }}">Importar CSV</a>
+  {% endif %}
+  {% if tiene_permiso('personal_new') %}
+    <a class="btn btn--primary" href="{{ url_for('personal.nuevo') }}">Nueva persona</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="get" class="filters" role="search" aria-label="Buscar personal">
+  {{ m.filtro_texto('dni', 'DNI', filtros, attrs='inputmode="numeric"') }}
+  {{ m.filtro_texto('nombre', 'Nombre o apellido', filtros) }}
+  <div class="field">
+    <label for="f-sector">Sector</label>
+    <select id="f-sector" name="sector_id">
+      <option value="">Todos</option>
+      {% for s in sectores %}
+        <option value="{{ s.id }}" {% if filtros.get('sector_id') == s.id|string %}selected{% endif %}>{{ s.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-tipo">Tipo de personal</label>
+    <select id="f-tipo" name="tipo_personal_id">
+      <option value="">Todos</option>
+      {% for t in tipos %}
+        <option value="{{ t.id }}" {% if filtros.get('tipo_personal_id') == t.id|string %}selected{% endif %}>{{ t.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {{ m.filtro_select('estado', 'Estado', [('activo', 'Activos'), ('inactivo', 'Inactivos')], filtros) }}
+  {{ m.filtro_select('orden', 'Ordenar por', [('apellido', 'Apellido y nombre'), ('dni', 'DNI'), ('creacion', 'Fecha de creación')], filtros, vacio=None) }}
+  {{ m.filtro_select('dir', 'Sentido', [('asc', 'Ascendente'), ('desc', 'Descendente')], filtros, vacio=None) }}
+  <div class="filters__actions">
+    <button type="submit" class="btn btn--primary">Buscar</button>
+    <a class="btn" href="{{ url_for('personal.index') }}">Limpiar</a>
+  </div>
+</form>
+
+<p class="muted">{{ pagina.total }} persona{{ '' if pagina.total == 1 else 's' }}</p>
+
+{% if pagina.items %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Apellido y nombre</th>
+        <th scope="col">DNI</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Sector</th>
+        <th scope="col">Menú</th>
+        <th scope="col">Estado</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pagina.items %}
+      <tr>
+        <td>{{ p.nombre_completo }}</td>
+        <td>{{ p.dni }}</td>
+        <td>{{ p.tipo_personal.nombre }}</td>
+        <td>{{ p.sector.nombre if p.sector else '—' }}</td>
+        <td>{{ p.tipo_menu.nombre }}</td>
+        <td>{{ m.estado(p.activo, 'Activa', 'Inactiva') }}</td>
+        <td class="table__actions">
+          {% if tiene_permiso('personal_show') %}<a href="{{ url_for('personal.show', persona_id=p.id) }}">Ver</a>{% endif %}
+          {% if tiene_permiso('personal_update') %}<a href="{{ url_for('personal.editar', persona_id=p.id) }}">Editar</a>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(pagina, 'personal.index', request.args.to_dict()) }}
+{% else %}
+<section class="panel empty">
+  <p>No hay personas que coincidan con la búsqueda.</p>
+  <a class="btn" href="{{ url_for('personal.index') }}">Ver todas</a>
+</section>
+{% endif %}
+{% endblock %}

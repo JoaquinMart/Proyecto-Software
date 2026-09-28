@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Mi perfil{% endblock %}
+{% block page_title %}Mi perfil{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <dl class="details">
+    <div><dt>Nombre y apellido</dt><dd>{{ usuario.nombre }} {{ usuario.apellido }}</dd></div>
+    <div><dt>Correo electrónico</dt><dd>{{ usuario.email }}</dd></div>
+    <div><dt>DNI</dt><dd>{{ usuario.dni }}</dd></div>
+    <div><dt>Rol</dt><dd>{{ usuario.rol.nombre }}</dd></div>
+    {% if usuario.sector %}<div><dt>Sector</dt><dd>{{ usuario.sector.nombre }}</dd></div>{% endif %}
+    <div><dt>Cuenta creada</dt><dd>{{ usuario.created_at.strftime('%d/%m/%Y') }}</dd></div>
+  </dl>
+</section>
+{% endblock %}

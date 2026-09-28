@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% block title %}Ajustes del sistema{% endblock %}
+{% block page_title %}Ajustes del sistema{% endblock %}
+
+{% block content %}
+<form method="post" class="panel form form--grid" action="{{ url_for('configuracion.actualizar') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <fieldset>
+    <legend>Listados</legend>
+    {{ m.campo('por_pagina', 'Elementos por página', datos, errores, tipo='number',
+               attrs='required min="1" max="25" step="1"',
+               ayuda='Entre 1 y 25. Lo respetan todos los listados de la administración y de la API.') }}
+  </fieldset>
+
+  <fieldset>
+    <legend>Mantenimiento</legend>
+    <div class="field field--check">
+      <input id="mantenimiento" name="mantenimiento" type="checkbox" value="1" {% if datos.get('mantenimiento') %}checked{% endif %}>
+      <label for="mantenimiento">Sitio en mantenimiento</label>
+      <p class="field__help">Deshabilita las interfaces operativas (la API responde 503 con el mensaje). La administración sigue disponible.</p>
+    </div>
+    <div class="field field--wide{% if errores.get('mensaje_mantenimiento') %} has-error{% endif %}">
+      <label for="mensaje_mantenimiento">Mensaje de mantenimiento</label>
+      <textarea id="mensaje_mantenimiento" name="mensaje_mantenimiento" rows="3" maxlength="255">{{ datos.get('mensaje_mantenimiento', '') }}</textarea>
+      {% if errores.get('mensaje_mantenimiento') %}<p class="field__error">{{ errores.mensaje_mantenimiento }}</p>
+      {% else %}<p class="field__help">Obligatorio si el mantenimiento está activo. Hasta 255 caracteres.</p>{% endif %}
+    </div>
+  </fieldset>
+
+  <div class="form__actions">
+    <button type="submit" class="btn btn--primary">Guardar ajustes</button>
+  </div>
+  {% if config.updated_at %}<p class="muted">Última modificación: {{ config.updated_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Cliente: el mensaje es obligatorio si se activa el mantenimiento
+  const chk = document.getElementById("mantenimiento");
+  const msg = document.getElementById("mensaje_mantenimiento");
+  const sync = () => { msg.required = chk.checked; };
+  chk.addEventListener("change", sync); sync();
+</script>
+{% endblock %}

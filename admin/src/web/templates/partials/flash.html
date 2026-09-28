@@ -1,0 +1,18 @@
+{#
+  Uso desde Flask:  flash("Usuario creado.", "success")
+  Categorías: success | info | warning | danger   (sin categoría → info)
+#}
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% if mensajes %}
+  <div class="flashes">
+    {% for categoria, mensaje in mensajes %}
+      {% set cat = categoria if categoria in ["success", "info", "warning", "danger"] else "info" %}
+      <div class="flash flash--{{ cat }}"
+           role="{{ 'alert' if cat in ['danger', 'warning'] else 'status' }}">
+        <p>{{ mensaje }}</p>
+        <button type="button" class="flash__close" data-close-flash aria-label="Cerrar mensaje">×</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}

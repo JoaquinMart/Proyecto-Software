@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block title %}{{ usuario.nombre_completo }}{% endblock %}
+{% block page_title %}{{ usuario.nombre }} {{ usuario.apellido }}{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ url_for('usuarios.index') }}">Volver al listado</a>
+  {% if tiene_permiso('user_update') %}
+    <a class="btn btn--primary" href="{{ url_for('usuarios.editar', usuario_id=usuario.id) }}">Editar</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <dl class="details">
+    <div><dt>Correo electrónico</dt><dd>{{ usuario.email }}</dd></div>
+    <div><dt>DNI</dt><dd>{{ usuario.dni }}</dd></div>
+    <div><dt>Rol</dt><dd>{{ usuario.rol.nombre }}</dd></div>
+    <div><dt>Sector</dt><dd>{{ usuario.sector.nombre if usuario.sector else '—' }}</dd></div>
+    <div>
+      <dt>Estado</dt>
+      <dd>
+        {% if usuario.activo %}<span class="badge badge--ok">Activo</span>
+        {% else %}<span class="badge badge--off">Bloqueado</span>{% endif %}
+      </dd>
+    </div>
+    <div><dt>Creado</dt><dd>{{ usuario.created_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+    <div><dt>Última modificación</dt><dd>{{ usuario.updated_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+  </dl>
+</section>
+
+<section class="panel danger-zone">
+  <h2>Acciones sobre la cuenta</h2>
+
+  {% if tiene_permiso('user_block') and usuario.rol.codigo != ROL_ADMIN %}
+    {% if usuario.activo %}
+      <form method="post" action="{{ url_for('usuarios.bloquear', usuario_id=usuario.id) }}"
+            onsubmit="return confirm('¿Bloquear a {{ usuario.email }}? No va a poder iniciar sesión.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">Bloquear usuario</button>
+      </form>
+    {% else %}
+      <form method="post" action="{{ url_for('usuarios.desbloquear', usuario_id=usuario.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">Desbloquear usuario</button>
+      </form>
+    {% endif %}
+  {% elif usuario.rol.codigo == ROL_ADMIN %}
+    <p class="muted">Los administradores no se pueden bloquear.</p>
+  {% endif %}
+
+  {% if tiene_permiso('user_destroy') and usuario.id != usuario_actual.id %}
+    <form method="post" action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}"
+          onsubmit="return confirm('¿Eliminar a {{ usuario.email }}? Esta acción no se puede deshacer.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--danger">Eliminar usuario</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

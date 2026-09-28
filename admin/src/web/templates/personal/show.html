@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ persona.nombre_completo }}{% endblock %}
+{% block page_title %}{{ persona.nombre }} {{ persona.apellido }}{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ url_for('personal.index') }}">Volver al listado</a>
+  {% if tiene_permiso('personal_update') %}
+    <a class="btn btn--primary" href="{{ url_for('personal.editar', persona_id=persona.id) }}">Editar</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <dl class="details">
+    <div><dt>DNI</dt><dd>{{ persona.dni }}</dd></div>
+    <div><dt>Tipo de personal</dt><dd>{{ persona.tipo_personal.nombre }}</dd></div>
+    <div><dt>Sector</dt><dd>{{ persona.sector.nombre if persona.sector else 'Sin sector (residente)' }}</dd></div>
+    <div><dt>Menú predeterminado</dt><dd>{{ persona.tipo_menu.nombre }}</dd></div>
+    <div><dt>Estado</dt><dd>{{ m.estado(persona.activo, 'Activa', 'Inactiva') }}</dd></div>
+    <div><dt>Creada</dt><dd>{{ persona.created_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+    <div><dt>Última modificación</dt><dd>{{ persona.updated_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+  </dl>
+</section>
+
+<section class="panel danger-zone">
+  <h2>Acciones</h2>
+  {% if persona.activo and tiene_permiso('personal_update') %}
+    <form method="post" action="{{ url_for('personal.desactivar', persona_id=persona.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn">Desactivar persona</button>
+    </form>
+  {% endif %}
+  {% if tiene_permiso('personal_destroy') %}
+    {% if tiene_historial %}
+      <p class="muted">Esta persona figura en pedidos o entregas: no se puede eliminar, solo desactivar.</p>
+    {% else %}
+      <form method="post" action="{{ url_for('personal.eliminar', persona_id=persona.id) }}"
+            onsubmit="return confirm('¿Eliminar a {{ persona.nombre }} {{ persona.apellido }}? Esta acción no se puede deshacer.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--danger">Eliminar persona</button>
+      </form>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

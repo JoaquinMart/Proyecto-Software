@@ -1,0 +1,6 @@
+# Agregá estas líneas a tu .gitignore
+.env
+flask_session/
+
+# Etapa 1 completa
+logs/

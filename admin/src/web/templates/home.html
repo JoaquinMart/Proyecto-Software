@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Inicio{% endblock %}
+{% block page_title %}Hola, {{ usuario_actual.nombre }}{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <p>Desde acá administrás la configuración que usan el Jefe de Servicio, el Servicio de Alimentación y el Comedor.</p>
+  {% if menu_items %}
+    <ul class="shortcuts">
+      {% for item in menu_items %}
+        <li><a class="btn" href="{{ url_for(item.endpoint) }}">{{ item.label }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Tu rol no tiene acceso a ningún módulo de administración.</p>
+  {% endif %}
+</section>
+{% endblock %}

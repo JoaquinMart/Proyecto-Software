@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Administración{% endblock %} · Alimentación HIAEP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <div class="app">
+    {% include "partials/sidebar.html" %}
+
+    <div class="app__main">
+      {% include "partials/topbar.html" %}
+
+      <main id="contenido" class="content" tabindex="-1">
+        <header class="page-header">
+          <h1>{% block page_title %}{% endblock %}</h1>
+          <div class="page-header__actions">{% block page_actions %}{% endblock %}</div>
+        </header>
+
+        {% if sitio_en_mantenimiento %}
+          <div class="flash flash--warning" role="status">
+            <p>El modo mantenimiento está activo: las interfaces operativas están deshabilitadas.
+            {% if tiene_permiso('config_show') %}<a href="{{ url_for('configuracion.index') }}">Ver ajustes</a>{% endif %}</p>
+          </div>
+        {% endif %}
+
+        {% include "partials/flash.html" %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='admin.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

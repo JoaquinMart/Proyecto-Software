@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% set edicion = persona is not none %}
+{% block title %}{{ 'Editar persona' if edicion else 'Nueva persona' }}{% endblock %}
+{% block page_title %}{{ 'Editar persona' if edicion else 'Nueva persona' }}{% endblock %}
+
+{% block content %}
+<form method="post" class="panel form form--grid" data-form-persona
+      action="{{ url_for('personal.actualizar', persona_id=persona.id) if edicion else url_for('personal.crear') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <fieldset>
+    <legend>Datos personales</legend>
+    {{ m.campo('dni', 'DNI', datos, errores, attrs='required inputmode="numeric" pattern="\\d{7,8}" maxlength="8"', ayuda='7 u 8 números, sin puntos.') }}
+    {{ m.campo('nombre', 'Nombre', datos, errores, attrs='required maxlength="50" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\' \\-]{2,50}" autocomplete="off"') }}
+    {{ m.campo('apellido', 'Apellido', datos, errores, attrs='required maxlength="50" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\' \\-]{2,50}" autocomplete="off"') }}
+  </fieldset>
+
+  <fieldset>
+    <legend>Asignación</legend>
+    <div class="field{% if errores.get('tipo_personal_id') %} has-error{% endif %}">
+      <label for="tipo_personal_id">Tipo de personal</label>
+      <select id="tipo_personal_id" name="tipo_personal_id" required>
+        <option value="">Elegí un tipo</option>
+        {% for t in tipos %}
+          <option value="{{ t.id }}" data-codigo="{{ t.codigo }}" {% if datos.get('tipo_personal_id')|string == t.id|string %}selected{% endif %}>{{ t.nombre }}</option>
+        {% endfor %}
+      </select>
+      {% if errores.get('tipo_personal_id') %}<p class="field__error">{{ errores.tipo_personal_id }}</p>{% endif %}
+    </div>
+
+    <div class="field{% if errores.get('sector_id') %} has-error{% endif %}" data-campo-sector>
+      <label for="sector_id">Sector</label>
+      <select id="sector_id" name="sector_id">
+        <option value="">Elegí un sector</option>
+        {% for s in sectores %}
+          {% if s.activo or (edicion and persona.sector_id == s.id) %}
+            <option value="{{ s.id }}" {% if datos.get('sector_id')|string == s.id|string %}selected{% endif %}>
+              {{ s.nombre }}{% if not s.activo %} (inactivo){% endif %}
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      {% if errores.get('sector_id') %}<p class="field__error">{{ errores.sector_id }}</p>
+      {% else %}<p class="field__help">Obligatorio para Personal Fijo. Los residentes no tienen sector.</p>{% endif %}
+    </div>
+
+    <div class="field{% if errores.get('tipo_menu_id') %} has-error{% endif %}">
+      <label for="tipo_menu_id">Menú predeterminado</label>
+      <select id="tipo_menu_id" name="tipo_menu_id" required>
+        <option value="">Elegí un menú</option>
+        {% for t in menus %}
+          <option value="{{ t.id }}" {% if datos.get('tipo_menu_id')|string == t.id|string %}selected{% endif %}>{{ t.nombre }}</option>
+        {% endfor %}
+      </select>
+      {% if errores.get('tipo_menu_id') %}<p class="field__error">{{ errores.tipo_menu_id }}</p>
+      {% else %}<p class="field__help">Se copia a cada pedido nuevo. Cambiarlo no altera pedidos anteriores.</p>{% endif %}
+    </div>
+
+    <div class="field field--check">
+      <input id="activo" name="activo" type="checkbox" value="1" {% if datos.get('activo') %}checked{% endif %}>
+      <label for="activo">Persona activa</label>
+      <p class="field__help">Una persona inactiva no puede sumarse a pedidos nuevos.</p>
+    </div>
+  </fieldset>
+
+  <div class="form__actions">
+    <button type="submit" class="btn btn--primary">{{ 'Guardar cambios' if edicion else 'Registrar persona' }}</button>
+    <a class="btn" href="{{ url_for('personal.show', persona_id=persona.id) if edicion else url_for('personal.index') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='personal.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ sector.nombre }}{% endblock %}
+{% block page_title %}{{ sector.nombre }}{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ url_for('sectores.index') }}">Volver al listado</a>
+  {% if tiene_permiso('sector_update') %}
+    <a class="btn btn--primary" href="{{ url_for('sectores.editar', sector_id=sector.id) }}">Editar</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <dl class="details">
+    <div><dt>Estado</dt><dd>{{ m.estado(sector.activo) }}</dd></div>
+    <div><dt>Personal asignado</dt><dd>{{ cantidad_personal }}</dd></div>
+    <div><dt>Creado</dt><dd>{{ sector.created_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+    <div><dt>Última modificación</dt><dd>{{ sector.updated_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+    <div class="details__wide"><dt>Descripción</dt><dd>{{ sector.descripcion or '—' }}</dd></div>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>Jefes de Servicio</h2>
+  {% if sector.jefes %}
+    <ul class="plain-list">
+      {% for jefe in sector.jefes %}
+        <li>{{ jefe.nombre_completo }} · {{ jefe.email }} {{ m.estado(jefe.activo, 'Activo', 'Bloqueado') }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">El sector no tiene Jefes de Servicio asignados.</p>
+  {% endif %}
+</section>
+
+<section class="panel danger-zone">
+  <h2>Acciones sobre el sector</h2>
+  {% if sector.activo and tiene_permiso('sector_update') %}
+    <form method="post" action="{{ url_for('sectores.desactivar', sector_id=sector.id) }}"
+          onsubmit="return confirm('¿Desactivar {{ sector.nombre }}? No se podrá usar para nuevas asignaciones ni pedidos.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn">Desactivar sector</button>
+    </form>
+  {% endif %}
+  {% if tiene_permiso('sector_destroy') %}
+    <form method="post" action="{{ url_for('sectores.eliminar', sector_id=sector.id) }}"
+          onsubmit="return confirm('¿Eliminar {{ sector.nombre }}? Esta acción no se puede deshacer.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--danger">Eliminar sector</button>
+    </form>
+    <p class="muted">Solo se puede eliminar un sector sin personal, usuarios ni pedidos. Si tiene, desactivalo.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{# Componentes reutilizables de formularios y listados.
+   Uso: {% import "macros.html" as m %} #}
+
+{% macro campo(nombre, etiqueta, datos, errores, tipo='text', attrs='', ayuda='') %}
+  <div class="field{% if errores.get(nombre) %} has-error{% endif %}">
+    <label for="{{ nombre }}">{{ etiqueta }}</label>
+    <input id="{{ nombre }}" name="{{ nombre }}" type="{{ tipo }}"
+           value="{{ '' if tipo == 'password' else (datos.get(nombre) if datos.get(nombre) is not none else '') }}"
+           {{ attrs|safe }}
+           {% if errores.get(nombre) or ayuda %}aria-describedby="{{ nombre }}-msg"{% endif %}
+           {% if errores.get(nombre) %}aria-invalid="true"{% endif %}>
+    {% if errores.get(nombre) %}
+      <p class="field__error" id="{{ nombre }}-msg">{{ errores[nombre] }}</p>
+    {% elif ayuda %}
+      <p class="field__help" id="{{ nombre }}-msg">{{ ayuda }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro seleccion(nombre, etiqueta, opciones, datos, errores, vacio='Elegí una opción', attrs='', ayuda='') %}
+  {# opciones: lista de (valor, texto) #}
+  <div class="field{% if errores.get(nombre) %} has-error{% endif %}">
+    <label for="{{ nombre }}">{{ etiqueta }}</label>
+    <select id="{{ nombre }}" name="{{ nombre }}" {{ attrs|safe }}>
+      {% if vacio %}<option value="">{{ vacio }}</option>{% endif %}
+      {% for valor, texto in opciones %}
+        <option value="{{ valor }}" {% if datos.get(nombre)|string == valor|string %}selected{% endif %}>{{ texto }}</option>
+      {% endfor %}
+    </select>
+    {% if errores.get(nombre) %}
+      <p class="field__error">{{ errores[nombre] }}</p>
+    {% elif ayuda %}
+      <p class="field__help">{{ ayuda }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro filtro_select(nombre, etiqueta, opciones, filtros, vacio='Todos') %}
+  <div class="field">
+    <label for="f-{{ nombre }}">{{ etiqueta }}</label>
+    <select id="f-{{ nombre }}" name="{{ nombre }}">
+      {% if vacio %}<option value="">{{ vacio }}</option>{% endif %}
+      {% for valor, texto in opciones %}
+        <option value="{{ valor }}" {% if filtros.get(nombre, '') == valor|string %}selected{% endif %}>{{ texto }}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endmacro %}
+
+{% macro filtro_texto(nombre, etiqueta, filtros, attrs='') %}
+  <div class="field">
+    <label for="f-{{ nombre }}">{{ etiqueta }}</label>
+    <input id="f-{{ nombre }}" name="{{ nombre }}" type="search" value="{{ filtros.get(nombre, '') }}" {{ attrs|safe }}>
+  </div>
+{% endmacro %}
+
+{% macro estado(activo, si='Activo', no='Inactivo') %}
+  {% if activo %}<span class="badge badge--ok">{{ si }}</span>{% else %}<span class="badge badge--off">{{ no }}</span>{% endif %}
+{% endmacro %}
+
+{% macro paginacion(pagina, endpoint, args) %}
+  {% if pagina.pages > 1 %}
+  <nav class="pagination" aria-label="Paginación">
+    {% if pagina.has_prev %}
+      <a class="btn" href="{{ url_for(endpoint, **dict(args, page=pagina.prev_num)) }}">Anterior</a>
+    {% endif %}
+    {% for p in pagina.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+      {% if p is none %}
+        <span class="pagination__gap">…</span>
+      {% elif p == pagina.page %}
+        <span class="btn is-current" aria-current="page">{{ p }}</span>
+      {% else %}
+        <a class="btn" href="{{ url_for(endpoint, **dict(args, page=p)) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if pagina.has_next %}
+      <a class="btn" href="{{ url_for(endpoint, **dict(args, page=pagina.next_num)) }}">Siguiente</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <p>{{ mensaje }}</p>
+  <p class="muted">Código {{ codigo }}</p>
+  <a class="btn" href="{{ url_for('home') }}">Ir al inicio</a>
+</section>
+{% endblock %}

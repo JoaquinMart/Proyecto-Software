@@ -1,0 +1,32 @@
+<header class="topbar">
+  <button class="topbar__menu-btn" type="button" data-toggle-sidebar
+          aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menú">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+
+  <span class="topbar__title">Administración</span>
+
+  {% if usuario_actual %}
+  <details class="account">
+    <summary class="account__trigger">
+      <span class="account__avatar" aria-hidden="true">
+        {{ usuario_actual.nombre[:1] }}{{ usuario_actual.apellido[:1] }}
+      </span>
+      <span class="account__name">{{ usuario_actual.nombre }} {{ usuario_actual.apellido }}</span>
+      <svg class="account__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+
+    <div class="account__menu">
+      <p class="account__email">{{ usuario_actual.email }}</p>
+      {% if endpoint_existe('auth.perfil') %}<a href="{{ url_for('auth.perfil') }}">Ver perfil</a>{% endif %}
+      {# Cerrar sesión por POST: evita que un link externo desloguee al usuario #}
+      {% if endpoint_existe('auth.logout') %}
+      <form action="{{ url_for('auth.logout') }}" method="post">
+        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        <button type="submit">Cerrar sesión</button>
+      </form>
+      {% endif %}
+    </div>
+  </details>
+  {% endif %}
+</header>

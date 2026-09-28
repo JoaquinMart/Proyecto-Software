@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% set edicion = sector is not none %}
+{% block title %}{{ 'Editar sector' if edicion else 'Nuevo sector' }}{% endblock %}
+{% block page_title %}{{ 'Editar sector' if edicion else 'Nuevo sector' }}{% endblock %}
+
+{% block content %}
+<form method="post" class="panel form form--grid"
+      action="{{ url_for('sectores.actualizar', sector_id=sector.id) if edicion else url_for('sectores.crear') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <fieldset>
+    <legend>Datos del sector</legend>
+    {{ m.campo('nombre', 'Nombre', datos, errores, attrs='required minlength="2" maxlength="100" autocomplete="off"') }}
+    <div class="field field--wide{% if errores.get('descripcion') %} has-error{% endif %}">
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" name="descripcion" rows="3" maxlength="500">{{ datos.get('descripcion', '') }}</textarea>
+      {% if errores.get('descripcion') %}<p class="field__error">{{ errores.descripcion }}</p>
+      {% else %}<p class="field__help">Opcional. Hasta 500 caracteres.</p>{% endif %}
+    </div>
+    <div class="field field--check{% if errores.get('activo') %} has-error{% endif %}">
+      <input id="activo" name="activo" type="checkbox" value="1" {% if datos.get('activo') %}checked{% endif %}>
+      <label for="activo">Sector activo</label>
+      {% if errores.get('activo') %}<p class="field__error">{{ errores.activo }}</p>{% endif %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Jefes de Servicio</legend>
+    <div class="field field--wide{% if errores.get('jefes') %} has-error{% endif %}">
+      {% set disponibles = jefes|selectattr('sector_id', 'none')|list + (sector.jefes if edicion else []) %}
+      {% if disponibles %}
+        <div class="checklist" role="group" aria-label="Jefes de Servicio asignados">
+          {% for jefe in disponibles|sort(attribute='apellido') %}
+            <label class="checklist__item">
+              <input type="checkbox" name="jefes" value="{{ jefe.id }}" {% if jefe.id|string in seleccionados %}checked{% endif %}>
+              <span>{{ jefe.nombre_completo }} <small class="muted">{{ jefe.email }}</small></span>
+            </label>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No hay Jefes de Servicio sin sector. Creá uno desde Usuarios.</p>
+      {% endif %}
+      {% if errores.get('jefes') %}<p class="field__error">{{ errores.jefes }}</p>
+      {% else %}<p class="field__help">Solo se listan los Jefes sin sector y los ya asignados a este. Un Jefe que se quita queda sin sector.</p>{% endif %}
+    </div>
+  </fieldset>
+
+  <div class="form__actions">
+    <button type="submit" class="btn btn--primary">{{ 'Guardar cambios' if edicion else 'Crear sector' }}</button>
+    <a class="btn" href="{{ url_for('sectores.show', sector_id=sector.id) if edicion else url_for('sectores.index') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

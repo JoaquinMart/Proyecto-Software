@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% import "macros.html" as m %}
+{% block title %}Sectores{% endblock %}
+{% block page_title %}Sectores y servicios{% endblock %}
+
+{% block page_actions %}
+  {% if tiene_permiso('sector_new') %}
+    <a class="btn btn--primary" href="{{ url_for('sectores.nuevo') }}">Nuevo sector</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="get" class="filters" role="search" aria-label="Buscar sectores">
+  {{ m.filtro_texto('nombre', 'Nombre', filtros) }}
+  {{ m.filtro_select('estado', 'Estado', [('activo', 'Activos'), ('inactivo', 'Inactivos')], filtros) }}
+  <div class="field">
+    <label for="f-jefe">Jefe de Servicio</label>
+    <select id="f-jefe" name="jefe_id">
+      <option value="">Todos</option>
+      {% for jefe in jefes %}
+        <option value="{{ jefe.id }}" {% if filtros.get('jefe_id') == jefe.id|string %}selected{% endif %}>{{ jefe.nombre_completo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {{ m.filtro_select('orden', 'Ordenar por', [('nombre', 'Nombre'), ('creacion', 'Fecha de creación')], filtros, vacio=None) }}
+  {{ m.filtro_select('dir', 'Sentido', [('asc', 'Ascendente'), ('desc', 'Descendente')], filtros, vacio=None) }}
+  <div class="filters__actions">
+    <button type="submit" class="btn btn--primary">Buscar</button>
+    <a class="btn" href="{{ url_for('sectores.index') }}">Limpiar</a>
+  </div>
+</form>
+
+<p class="muted">{{ pagina.total }} sector{{ '' if pagina.total == 1 else 'es' }}</p>
+
+{% if pagina.items %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Nombre</th>
+        <th scope="col">Jefes de Servicio</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Creado</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in pagina.items %}
+      <tr>
+        <td>{{ s.nombre }}</td>
+        <td>{{ s.jefes|map(attribute='nombre_completo')|join('; ') or '—' }}</td>
+        <td>{{ m.estado(s.activo) }}</td>
+        <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
+        <td class="table__actions">
+          {% if tiene_permiso('sector_show') %}<a href="{{ url_for('sectores.show', sector_id=s.id) }}">Ver</a>{% endif %}
+          {% if tiene_permiso('sector_update') %}<a href="{{ url_for('sectores.editar', sector_id=s.id) }}">Editar</a>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(pagina, 'sectores.index', request.args.to_dict()) }}
+{% else %}
+<section class="panel empty">
+  <p>No hay sectores que coincidan con la búsqueda.</p>
+  <a class="btn" href="{{ url_for('sectores.index') }}">Ver todos</a>
+</section>
+{% endif %}
+{% endblock %}

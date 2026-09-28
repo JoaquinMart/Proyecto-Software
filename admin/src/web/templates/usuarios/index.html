@@ -1,0 +1,139 @@
+{% extends "layout.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block page_actions %}
+  {% if tiene_permiso('user_new') %}
+    <a class="btn btn--primary" href="{{ url_for('usuarios.nuevo') }}">Nuevo usuario</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="get" class="filters" role="search" aria-label="Buscar usuarios">
+  <div class="field">
+    <label for="f-email">Correo</label>
+    <input id="f-email" name="email" type="search" value="{{ filtros.get('email', '') }}">
+  </div>
+  <div class="field">
+    <label for="f-nombre">Nombre o apellido</label>
+    <input id="f-nombre" name="nombre" type="search" value="{{ filtros.get('nombre', '') }}">
+  </div>
+  <div class="field">
+    <label for="f-dni">DNI</label>
+    <input id="f-dni" name="dni" type="search" inputmode="numeric" value="{{ filtros.get('dni', '') }}">
+  </div>
+  <div class="field">
+    <label for="f-activo">Estado</label>
+    <select id="f-activo" name="activo">
+      <option value="">Todos</option>
+      <option value="si" {% if filtros.get('activo') == 'si' %}selected{% endif %}>Activos</option>
+      <option value="no" {% if filtros.get('activo') == 'no' %}selected{% endif %}>Bloqueados</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-rol">Rol</label>
+    <select id="f-rol" name="rol_id">
+      <option value="">Todos</option>
+      {% for rol in roles %}
+        <option value="{{ rol.id }}" {% if filtros.get('rol_id') == rol.id|string %}selected{% endif %}>{{ rol.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-sector">Sector</label>
+    <select id="f-sector" name="sector_id">
+      <option value="">Todos</option>
+      {% for sector in sectores %}
+        <option value="{{ sector.id }}" {% if filtros.get('sector_id') == sector.id|string %}selected{% endif %}>{{ sector.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-orden">Ordenar por</label>
+    <select id="f-orden" name="orden">
+      {% for valor, texto in [('creacion', 'Fecha de creación'), ('apellido', 'Apellido y nombre'), ('email', 'Correo')] %}
+        <option value="{{ valor }}" {% if filtros.get('orden', 'creacion') == valor %}selected{% endif %}>{{ texto }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-dir">Sentido</label>
+    <select id="f-dir" name="dir">
+      <option value="desc" {% if filtros.get('dir', 'desc') == 'desc' %}selected{% endif %}>Descendente</option>
+      <option value="asc" {% if filtros.get('dir') == 'asc' %}selected{% endif %}>Ascendente</option>
+    </select>
+  </div>
+  <div class="filters__actions">
+    <button type="submit" class="btn btn--primary">Buscar</button>
+    <a class="btn" href="{{ url_for('usuarios.index') }}">Limpiar</a>
+  </div>
+</form>
+
+<p class="muted">{{ pagina.total }} usuario{{ '' if pagina.total == 1 else 's' }}</p>
+
+{% if pagina.items %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Apellido y nombre</th>
+        <th scope="col">Correo</th>
+        <th scope="col">DNI</th>
+        <th scope="col">Rol</th>
+        <th scope="col">Sector</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Creado</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in pagina.items %}
+      <tr>
+        <td>{{ u.nombre_completo }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.dni }}</td>
+        <td>{{ u.rol.nombre }}</td>
+        <td>{{ u.sector.nombre if u.sector else '—' }}</td>
+        <td>
+          {% if u.activo %}<span class="badge badge--ok">Activo</span>
+          {% else %}<span class="badge badge--off">Bloqueado</span>{% endif %}
+        </td>
+        <td>{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+        <td class="table__actions">
+          {% if tiene_permiso('user_show') %}<a href="{{ url_for('usuarios.show', usuario_id=u.id) }}">Ver</a>{% endif %}
+          {% if tiene_permiso('user_update') %}<a href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pagina.pages > 1 %}
+{% set args = request.args.to_dict() %}
+<nav class="pagination" aria-label="Paginación">
+  {% if pagina.has_prev %}
+    <a class="btn" href="{{ url_for('usuarios.index', **dict(args, page=pagina.prev_num)) }}">Anterior</a>
+  {% endif %}
+  {% for p in pagina.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+    {% if p is none %}
+      <span class="pagination__gap">…</span>
+    {% elif p == pagina.page %}
+      <span class="btn is-current" aria-current="page">{{ p }}</span>
+    {% else %}
+      <a class="btn" href="{{ url_for('usuarios.index', **dict(args, page=p)) }}">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if pagina.has_next %}
+    <a class="btn" href="{{ url_for('usuarios.index', **dict(args, page=pagina.next_num)) }}">Siguiente</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<section class="panel empty">
+  <p>No hay usuarios que coincidan con la búsqueda.</p>
+  <a class="btn" href="{{ url_for('usuarios.index') }}">Ver todos</a>
+</section>
+{% endif %}
+{% endblock %}

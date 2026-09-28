@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · Alimentación HIAEP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+  <main class="login">
+    <section class="login__brand" aria-hidden="true">
+      <svg class="login__mark" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="13"/><path d="M10 17h12a6 6 0 0 1-12 0z"/><path d="M13 12c0-2 2-2 2-4M17 12c0-2 2-2 2-4"/>
+      </svg>
+      <p class="login__app">Alimentación</p>
+      <p class="login__hospital">Hospital Interzonal de Agudos Especializado en Pediatría "Sor María Ludovica"</p>
+    </section>
+
+    <section class="login__panel">
+      <h1>Administración</h1>
+      <p class="login__intro">Ingresá con tu correo y contraseña.</p>
+
+      {% include "partials/flash.html" %}
+
+      <form method="post" action="{{ url_for('auth.login_post', next=request.args.get('next')) }}" class="form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" value="{{ email }}" required autocomplete="username" autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn--primary btn--block">Iniciar sesión</button>
+      </form>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>

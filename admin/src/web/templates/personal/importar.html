@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}Importar personal{% endblock %}
+{% block page_title %}Importar personal desde CSV{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ url_for('personal.index') }}">Volver al listado</a>
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Formato del archivo</h2>
+  <p>La primera fila debe tener estos encabezados, separados por coma o punto y coma:</p>
+  <pre class="code">{{ columnas|join(',') }}
+30111222,Ana,Pérez,Personal Fijo,Laboratorio De Guardia,General
+40111333,Juan,López,Residente,,Vegetariano</pre>
+  <ul class="plain-list">
+    <li><strong>tipo_personal</strong>: Personal Fijo o Residente.</li>
+    <li><strong>sector</strong>: nombre del sector, obligatorio para Personal Fijo. Para residentes dejalo vacío.</li>
+    <li><strong>menu</strong>: General, Vegetariano o Celíaco.</li>
+  </ul>
+  <p>Cada fila se valida con las mismas reglas que el alta manual. Las filas con errores no se importan
+     y se informan abajo con su motivo; el resto sí se importa.</p>
+  <a class="btn" href="{{ url_for('static', filename='ejemplo_personal.csv') }}" download>Descargar archivo de ejemplo</a>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="panel form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field">
+    <label for="archivo">Archivo CSV</label>
+    <input id="archivo" name="archivo" type="file" accept=".csv,text/csv" required>
+    <p class="field__help">Hasta 2 MB. Codificación UTF-8 o la de Excel.</p>
+  </div>
+  <div class="form__actions">
+    <button type="submit" class="btn btn--primary">Importar</button>
+  </div>
+</form>
+
+{% if informe %}
+<section class="panel">
+  <h2>Resultado</h2>
+  <dl class="details">
+    <div><dt>Procesados</dt><dd>{{ informe.procesados }}</dd></div>
+    <div><dt>Importados</dt><dd>{{ informe.importados }}</dd></div>
+    <div><dt>Rechazados</dt><dd>{{ informe.rechazados }}</dd></div>
+  </dl>
+  {% if informe.errores %}
+  <div class="table-wrap" style="margin-top: 16px">
+    <table class="table">
+      <thead><tr><th scope="col">Fila</th><th scope="col">DNI</th><th scope="col">Motivo</th></tr></thead>
+      <tbody>
+        {% for e in informe.errores %}
+          <tr><td>{{ e.fila }}</td><td>{{ e.dni or '—' }}</td><td class="wrap">{{ e.motivo }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
